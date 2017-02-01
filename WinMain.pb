@@ -209,105 +209,27 @@ Procedure AddNote(TimeIndex.i,Type.i,Pitch.i)
 EndProcedure
 
 Procedure DrawBackImage()
-  
+ 
   BaseImage = CreateImage(#PB_Any,500,400,32,RGBA(255,255,255,0))
-  
+ 
   StartVectorDrawing(ImageVectorOutput(BaseImage))
-  
+ 
   VectorSourceColor(RGBA(0,255,255,255))
-  MovePathCursor(0,20)
-  AddPathLine(512,20)
-  MovePathCursor(0,40)
-  AddPathLine(512,40)  
-  MovePathCursor(0,60)
-  AddPathLine(512,60)
-  MovePathCursor(0,80)
-  AddPathLine(512,80)  
-  MovePathCursor(0,100)
-  AddPathLine(512,100)  
-  MovePathCursor(0,120)
-  AddPathLine(512,120)
-  MovePathCursor(0,140)
-  AddPathLine(512,140)
-  MovePathCursor(0,160)
-  AddPathLine(512,160)  
-  MovePathCursor(0,180)
-  AddPathLine(512,180)
-  MovePathCursor(0,200)
-  AddPathLine(512,200)  
-  MovePathCursor(0,220)
-  AddPathLine(512,220)
-  MovePathCursor(0,240)
-  AddPathLine(512,240)  
-  MovePathCursor(0,260)
-  AddPathLine(512,260)
-  MovePathCursor(0,280)
-  AddPathLine(512,280)  
-  MovePathCursor(0,300)
-  AddPathLine(512,300)  
-  MovePathCursor(0,320)
-  AddPathLine(512,320)
-  MovePathCursor(0,340)
-  AddPathLine(512,340)
-  MovePathCursor(0,360)
-  AddPathLine(512,360)  
-  MovePathCursor(0,380)
-  AddPathLine(512,380)
+  For k=20 To 380 Step 20
+    MovePathCursor(0,k)
+    AddPathLine(512,k)
+  Next
   StrokePath(0.5)
-
+ 
   VectorSourceColor(RGBA(255,255,0,255))
-  MovePathCursor(20,0)
-  AddPathLine(20,400)
-  MovePathCursor(40,0)
-  AddPathLine(40,400) 
-  MovePathCursor(60,0)
-  AddPathLine(60,400)
-  MovePathCursor(80,0)
-  AddPathLine(80,400)   
-  MovePathCursor(100,0)
-  AddPathLine(100,400)
-  MovePathCursor(120,0)
-  AddPathLine(120,400) 
-  MovePathCursor(140,0)
-  AddPathLine(140,400)
-  MovePathCursor(160,0)
-  AddPathLine(160,400)  
-  MovePathCursor(180,0)
-  AddPathLine(180,400)
-  MovePathCursor(200,0)
-  AddPathLine(200,400) 
-  MovePathCursor(220,0)
-  AddPathLine(220,400)
-  MovePathCursor(240,0)
-  AddPathLine(240,400)   
-  MovePathCursor(260,0)
-  AddPathLine(260,400)
-  MovePathCursor(280,0)
-  AddPathLine(280,400) 
-  MovePathCursor(300,0)
-  AddPathLine(300,400)
-  MovePathCursor(320,0) 
-  AddPathLine(320,400)
-  MovePathCursor(340,0)
-  AddPathLine(340,400)   
-  MovePathCursor(360,0)
-  AddPathLine(360,400)
-  MovePathCursor(380,0)
-  AddPathLine(380,400) 
-  MovePathCursor(400,0)
-  AddPathLine(400,400) 
-  MovePathCursor(420,0) 
-  AddPathLine(420,400)
-  MovePathCursor(440,0)
-  AddPathLine(440,400)   
-  MovePathCursor(460,0)
-  AddPathLine(460,400)
-  MovePathCursor(480,0)
-  AddPathLine(480,400)   
+  For k=20 To 480 Step 20
+    MovePathCursor(k,0)
+    AddPathLine(k,400)
+  Next
   StrokePath(1)
-
+ 
   StopVectorDrawing()
-  
+ 
 EndProcedure
 
 Procedure ShowNotes(ThisTrack.i)
@@ -379,6 +301,21 @@ Procedure ActionTimer(TrackLength.i)
       Delay(1) ;keep cpu use in check
     Until position = TrackLength
 
+EndProcedure
+
+Procedure StartPlaying(void)
+  
+  Debug "Play"
+  midiOutOpen_(@hMidiOut,midiport,0,0,0)
+  ;Set Instrument         
+  SetInstrument(1,Instrument)
+  ;Reset to start of track
+  Trackposition = 0
+  ;Start Play Timer
+  ActionTimer(25)
+  Playing = #False
+  midiOutClose_(hMidiOut)
+  ShowNotes(0)
 EndProcedure
 
 Window_0 = OpenWindow(#WinMain, 0, 0, 600, 500, "", #PB_Window_SystemMenu)
@@ -473,20 +410,11 @@ Repeat
           Instrument = GetGadgetItemData(#cmbInstrument,GetGadgetState(#cmbInstrument))
           
         Case #btnPlay
-          midiOutOpen_(@hMidiOut,midiport,0,0,0)
-          Playing = #True
-          ;Set Instrument          
-          SetInstrument(1,Instrument)
-          ;Reset to start of track
-          Trackposition = 0
-          ;Start Play Timer
-          Thread = CreateThread(@ActionTimer(), 25)
-          While IsThread(Thread)
-            Delay (500) ;Thread time = 125 so allow to finish correctly
-          Wend
-          Playing = #False
-          midiOutClose_(hMidiOut)
-          ShowNotes(0)
+          
+          If Playing=#False
+            Playing=#True
+            CreateThread(@StartPlaying(),0)
+          EndIf
           
         Case #cnvTrack
           
@@ -508,7 +436,8 @@ Repeat
   EndSelect
  
 Until Event = #PB_Event_CloseWindow
-; IDE Options = PureBasic 5.51 (Windows - x64)
-; CursorPosition = 502
+; IDE Options = PureBasic 5.60 Beta 1 (Windows - x64)
+; CursorPosition = 416
+; FirstLine = 109
 ; Folding = AAw
 ; EnableXP
